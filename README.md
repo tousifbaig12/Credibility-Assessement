@@ -148,9 +148,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import MultinomialNB
 
-## Train Test Split
+### Train Test Split
 
-# Custom feature list
+### Custom feature list
 customFeatures = ['wordCount', 'subjectivity','compoundIntensity','negativeIntensity',
        'neutralIntensity', 'positiveIntensity','i_count',
        'ner_count', 'char_count', 'avg_word_len','modality',
@@ -163,33 +163,33 @@ splitColumns = ['sentence_text'] + customFeatures
 samSize = len(df[df.Experience==1])
 df_sampled = pd.concat([df[df.Experience==0].sample(samSize, random_state=150), df[df.Experience==1]])
 
-# shuffling the combined dataset of balanced data i-e experience and non experience
+### shuffling the combined dataset of balanced data i-e experience and non experience
 df_sampled = df_sampled.sample(frac=1, random_state=50).reset_index(drop=True)
 scaler = MinMaxScaler()
 df_exp = pd.DataFrame(scaler.fit_transform(df_sampled[customFeatures]), columns=customFeatures)
 df_exp['sentence_text']=df_sampled['sentence_text']
 df_exp['Experience']=df_sampled['Experience']
 
-# train test split (80-20)
+### train test split (80-20)
 X_train, X_test, y_train, y_test = train_test_split(df_exp[splitColumns], df_exp.Experience, \
                                                     test_size=0.2, random_state=10, stratify=df_exp.Experience)
 
 
-# Creating train & test for 3 different combinations TF-IDF, only Custom features, TF-IDF + Custom features
+### Creating train & test for 3 different combinations TF-IDF, only Custom features, TF-IDF + Custom features
 
 vecModel = TfidfVectorizer(analyzer='word', stop_words='english')
 train = vecModel.fit_transform(X_train.sentence_text)
 test = vecModel.transform(X_test.sentence_text)
 
-# Stacking TF-IDF sparse matrix with custom features
+### Stacking TF-IDF sparse matrix with custom features
 train_2 = sp.hstack([train, X_train[customFeatures]])
 test_2 = sp.hstack([test, X_test[customFeatures]])
 
-#Only custom features
+### Only custom features
 train_3 = X_train[customFeatures]
 test_3 =  X_test[customFeatures]
 
-# Models
+### Models
 
 models = {'SVM':SVC(C=1, kernel='linear', random_state=10),\
           'Random Forest': RandomForestClassifier(n_estimators=100, min_samples_split=5),\
@@ -197,16 +197,16 @@ models = {'SVM':SVC(C=1, kernel='linear', random_state=10),\
           'KNN': KNeighborsClassifier(n_neighbors=2),\
           'Naive Bayes': MultinomialNB()}
 
-## Only with TFIDF
+### Only with TFIDF
 
 rslt = list()
 for name, m in models.items():
   m.fit(train, y_train)
   pred = m.predict(test)
-  # Gives clsasification report which gives Accuracy, precision, recall and f1
+  ### Gives clsasification report which gives Accuracy, precision, recall and f1
   report = classification_report(y_test, pred, output_dict=True)
   
-  # To format in the dataframe for experience records, we use get method
+  ### To format in the dataframe for experience records, we use get method
   rslt.append({'Model': name,\
                'Accuracy': round(accuracy_score(y_test, pred)*100, 2),\
                'Precision': round(report.get('1').get('precision')*100, 2),\
@@ -218,7 +218,7 @@ df_classifier.sort_values(by='Accuracy', ascending=False, inplace=True)
 df_classifier.reset_index(drop=True, inplace=True)
 df_classifier
 
-## Only Custom Features
+### Only Custom Features
 
 rslt = list()
 for name, m in models.items():
@@ -237,7 +237,7 @@ df_classifier.sort_values(by='Accuracy', ascending=False, inplace=True)
 df_classifier.reset_index(drop=True, inplace=True)
 df_classifier
 
-## TFIDF + Custom features
+### TFIDF + Custom features
 
 rslt = list()
 for name, m in models.items():
@@ -257,16 +257,16 @@ df_classifier
 
 
 
-# Evaluating Experience - Using Deep Learning Algorithm BERT
+### Evaluating Experience - Using Deep Learning Algorithm BERT
 
-# Pre-Trained BERT 12-Layer Model
-
-
+### Pre-Trained BERT 12-Layer Model
 
 
 
-# Loss function - Cross Entropy loss
-# Optimizer - AdamW
+
+
+### Loss function - Cross Entropy loss
+### Optimizer - AdamW
 
 !pip install transformers
 import torch
@@ -291,7 +291,7 @@ samSize = len(df[df.Experience==1])
 df_sampled = pd.concat([df[df.Experience==0].sample(samSize, random_state=50), df[df.Experience==1]])
 df_sampled = df_sampled.sample(frac=1,random_state=50).reset_index(drop=True)
 df_sampled.Experience.value_counts()
-# Creating a 'list' of sentences using data frame
+### Creating a 'list' of sentences using data frame
 sentences = df_sampled.sentence_text.values
 
 sentences = ["[CLS] " + sentence + " [SEP]" for sentence in sentences]
@@ -315,18 +315,18 @@ BERT requires specifically formatted inputs. For each tokenized input sentence, 
 
 Although we can have variable length input sentences, BERT does requires our input arrays to be the same size. We address this by first choosing a maximum sentence length, and then padding and truncating our inputs until every input sequence is of the same length.</p><p>To "pad" our inputs in this context means that if a sentence is shorter than the maximum sentence length, we simply add 0s to the end of the sequence until it is the maximum sentence length.</p><p>If a sentence is longer than the maximum sentence length, then we simply truncate the end of the sequence, discarding anything that does not fit into our maximum sentence length.</p><p>We pad and truncate our sequences so that they all become of length MAX_LEN ("post" indicates that we want to pad and truncate at the end of the sequence, as opposed to the beginning) pad_sequences is a utility function that we're borrowing from Keras. It simply handles the truncating and padding of Python lists.
 
-# BERT tokenizer to convert tokens to their respectively index number as per BERT vocabulary
+### BERT tokenizer to convert tokens to their respectively index number as per BERT vocabulary
 MAX_LEN = 128
 input_ids = [tokenizer.convert_tokens_to_ids(x) for x in tokenized_texts]
 print(len(input_ids[0]))
-#----
+###----
 input_ids = pad_sequences(input_ids, maxlen=MAX_LEN, dtype="long", truncating="post", padding="post")
 print(len(input_ids[0]))
 
-# Attention masks
+### Attention masks
 attention_masks = []
 
-# Create a mask of 1s for each token followed by 0s for padding
+### Create a mask of 1s for each token followed by 0s for padding
 for seq in input_ids:
   seq_mask = [float(i>0) for i in seq]
   attention_masks.append(seq_mask)
@@ -376,7 +376,7 @@ optimizer_grouped_parameters = [
 optimizer = AdamW(optimizer_grouped_parameters,
                      lr=2e-5)
 
-# Function to calculate the accuracy of our predictions vs labels
+### Function to calculate the accuracy of our predictions vs labels
 def flat_accuracy(preds, labels):
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
@@ -404,66 +404,66 @@ Evalution loop:
 t = [] 
 trueLabels = []
 predLabels = []
-# Store our loss and accuracy for plotting
+### Store our loss and accuracy for plotting
 train_loss_set = []
 
-# Number of training epochs (authors recommend between 2 and 4)
+### Number of training epochs (authors recommend between 2 and 4)
 epochs = 5
 loss=torch.nn.CrossEntropyLoss()
-# trange is a tqdm wrapper around the normal python range
+### trange is a tqdm wrapper around the normal python range
 for _ in trange(epochs, desc="Epoch"):
-  # Training
-  # Set our model to training mode (as opposed to evaluation mode)
+  ### Training
+  ### Set our model to training mode (as opposed to evaluation mode)
   model.train()
-  # Tracking variables
+  ### Tracking variables
   tr_loss = 0
   nb_tr_examples, nb_tr_steps = 0, 0
   
-  # Train the data for one epoch
+  ### Train the data for one epoch
   for step, batch in enumerate(train_dataloader):
-    # Add batch to GPU
+    ### Add batch to GPU
     batch = tuple(t.to(device) for t in batch)
-    # batch = tuple(t for t in batch)
-    # Unpack the inputs from our dataloader
+    ### batch = tuple(t for t in batch)
+    ### Unpack the inputs from our dataloader
     b_input_ids, b_input_mask, b_labels = batch
-    # Clear out the gradients (by default they accumulate)
+    ### Clear out the gradients (by default they accumulate)
     optimizer.zero_grad()
-    # Forward pass
+    ### Forward pass
     loss = model(b_input_ids.long(), token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)[0]
 
     train_loss_set.append(loss.item())    
-    # Backward pass
+    ### Backward pass
     loss.backward()
-    # Update parameters and take a step using the computed gradient
+    ### Update parameters and take a step using the computed gradient
     optimizer.step()
     
     
-    # Update tracking variables
+    ### Update tracking variables
     tr_loss += loss.item()
     nb_tr_examples += b_input_ids.size(0)
     nb_tr_steps += 1
   print("Train loss: {}".format(tr_loss/nb_tr_steps))
-  # Validation
-  # Put model in evaluation mode to evaluate loss on the validation set
+  ### Validation
+  ### Put model in evaluation mode to evaluate loss on the validation set
   model.eval()
 
-  # Tracking variables 
+  ### Tracking variables 
   eval_loss, eval_accuracy = 0, 0
   nb_eval_steps, nb_eval_examples = 0, 0
 
-  # Evaluate data for one epoch
+  ### Evaluate data for one epoch
   for batch in validation_dataloader:
-    # Add batch to GPU
+    ### Add batch to GPU
     batch = tuple(t.to(device) for t in batch)
-    #batch = tuple(t for t in batch)
-    # Unpack the inputs from our dataloader
+    ### batch = tuple(t for t in batch)
+    ### Unpack the inputs from our dataloader
     b_input_ids, b_input_mask, b_labels = batch
-    # Telling the model not to compute or store gradients, saving memory and speeding up validation
+    ### Telling the model not to compute or store gradients, saving memory and speeding up validation
     with torch.no_grad():
-      # Forward pass, calculate logit predictions
+      ### Forward pass, calculate logit predictions
       logits = model(b_input_ids.long(), token_type_ids=None, attention_mask=b_input_mask)[0]
     
-    # Move logits and labels to CPU
+    ### Move logits and labels to CPU
     logits = logits.detach().cpu().numpy()
     label_ids = b_labels.to('cpu').numpy()
     trueLabels.extend(label_ids)
