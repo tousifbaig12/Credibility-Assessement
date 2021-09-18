@@ -4,11 +4,11 @@ The objective of this project is to formulate a definition for credibility in ge
 
 # Experimentation Code 
 
-# Evaluating Experience - Using Machine Learning
+## Evaluating Experience - Using Machine Learning
 
 !pip install pattern
-# To evaluate sentence modality we use pattern library
-# It gives score for a sentence between -1 to +1
+### To evaluate sentence modality we use pattern library
+### It gives score for a sentence between -1 to +1
 
 import numpy as np
 import pandas as pd
@@ -21,18 +21,18 @@ from pattern.en import modality
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 nltk.download('all')
-# Downloading all the packages within NLTK
+### Downloading all the packages within NLTK
 
-# Dataset
+### Dataset
 
 filePath = 'https://raw.githubusercontent.com/serenpa/Blog-Credibility-Corpus/main/blog_credibility_dataset.tsv'
-# Convert accented characters to ASCII characters - encoding
+### Convert accented characters to ASCII characters - encoding
 df = pd.read_csv(filePath, sep='\t', encoding='latin1')
-# Decoding to special characters
+### Decoding to special characters
 df['sentence_text'] = df.sentence_text.apply(lambda x:x.encode('latin1').decode('cp1252'))
-# Removing empty spaces and special characters using regex
+### Removing empty spaces and special characters using regex
 cleanParser=re.compile(r'(\w+)')
-# Replacing multiple spaces or special characters to single space in a single sentence plus lowering characters
+### Replacing multiple spaces or special characters to single space in a single sentence plus lowering characters
 df['cleanSentence'] = df.sentence_text.apply(lambda x: ' '.join([i.lower() for i in cleanParser.findall(x.strip())]))
 df.head()
 
@@ -40,15 +40,15 @@ print('#Unique document Ids',df.document_id.nunique())
 
 df.Experience.value_counts()
 
-# Features
+### Features
 
 def getSubjectivity(sentence):
   ''' Subjective sentences generally refer to personal opinion, emotion or judgment whereas objective refers to factual information'''
   textBlobObj = TextBlob(sentence)
-  # rounding subjectivity score to 4 decimals
+  ### rounding subjectivity score to 4 decimals
   return round(textBlobObj.subjectivity, 4)
 
-# Feature 1-4 - Sentiment Intensity Compound, Positive, Negative, Neutral
+### Feature 1-4 - Sentiment Intensity Compound, Positive, Negative, Neutral
 '''The Compound score is a metric that calculates the sum of all the
  lexicon ratings which have been normalized between -1(most extreme negative) and +1 (most extreme positive).
  positive sentiment : (compound score >= 0.05) 
@@ -60,24 +60,24 @@ def getSentimentIntensity(sentence):
   scores = vad.polarity_scores(sentence)
   return scores.get('compound'), scores.get('neg'), scores.get('neu'), scores.get('pos')
 
-# Feature 5 - Retrieving POS  tags from the sentence
+### Feature 5 - Retrieving POS  tags from the sentence
 def getPOSTags(sentence):
   from collections import Counter
   words = nltk.word_tokenize(sentence)
   pos_tags = nltk.pos_tag(words)
   return pos_tags, Counter(tag for word, tag in pos_tags).items()
 
-# Feature 6 - Named entity recognition
+### Feature 6 - Named entity recognition
 def identifyNER(ptags):
   ners = nltk.ne_chunk(ptags, binary=True)
   words = [i[0] for i in ners if isinstance(i, nltk.Tree)]
   return ' '.join(i[0] for i in words) if words else np.nan
 
-# Feaature 7 - Count of I
+### Feaature 7 - Count of I
 def countIs(sentence):
   return len(re.findall(r'i | i ', sentence.lower()))
 
-# Feature 8 - Modality score for given sentence
+### Feature 8 - Modality score for given sentence
 '''
 Modality is a semantic notion that is related to speaker’s opinion and belief 
 about the event’s believability. Modality in English can be achieved by modal verbs (will/would)
@@ -88,34 +88,34 @@ def getModality(sentence):
   except RuntimeError as e:
     return 0
 
-# subjectivity
+### subjectivity
 df['subjectivity'] = df.apply(lambda x: getSubjectivity(x.cleanSentence), axis='columns')
 
-# Feature 9 - Word count
+### Feature 9 - Word count
 df['wordCount'] = df.cleanSentence.apply(lambda x: len(x.split(' ')))
 
-# POS tags
+### POS tags
 df[['pos_tags', 'pos_Density']] = df.apply(lambda x: getPOSTags(x.cleanSentence), axis='columns', result_type='expand')
 
-# Sentiment intensity
+### Sentiment intensity
 df[['compoundIntensity', 'negativeIntensity', 'neutralIntensity', 'positiveIntensity']] = df.apply(lambda x: \
                                           getSentimentIntensity(x.cleanSentence), axis='columns', result_type='expand')
 
-# NER recognition
+### NER recognition
 df['ner_Density'] = df.pos_tags.apply(identifyNER)
 
-# Count of I
+### Count of I
 df['i_count'] = df.cleanSentence.apply(countIs)
 
 df['ner_count'] = df.ner_Density.apply(lambda x: 0 if isinstance(x, float) else len(x.split(' ')))
 
-# Feature 10 - Char count
+### Feature 10 - Char count
 df['char_count'] = df.cleanSentence.apply(lambda x:len(x))
-# Feature 11 - Average word length
+### Feature 11 - Average word length
 df['avg_word_len'] = df.cleanSentence.apply(lambda x: np.mean([len(i) for i in x.split(' ')]))
 df['modality'] = df.cleanSentence.apply(getModality)
 
-#Features 12 - POS count
+### Features 12 - POS count
 df['NN_Count'] = df.pos_Density.apply(lambda x: dict(x).get('NN',0))
 df['IN_Count'] = df.pos_Density.apply(lambda x: dict(x).get('IN',0))
 df['DT_Count'] = df.pos_Density.apply(lambda x: dict(x).get('DT',0))
@@ -134,7 +134,7 @@ df['VBN_Count'] = df.pos_Density.apply(lambda x: dict(x).get('VBN',0))
 df['CD_Count'] = df.pos_Density.apply(lambda x: dict(x).get('CD',0))
 df.head()
 
-# Importing Models
+### Importing Models
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
