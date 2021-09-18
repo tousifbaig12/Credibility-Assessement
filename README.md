@@ -4,8 +4,6 @@ The objective of this project is to formulate a definition for credibility in ge
 
 # Experimentation Code 
 
-## Evaluating Experience - Using Machine Learning
-
 !pip install pattern
 ### To evaluate sentence modality we use pattern library
 ### It gives score for a sentence between -1 to +1
@@ -36,7 +34,7 @@ cleanParser=re.compile(r'(\w+)')
 df['cleanSentence'] = df.sentence_text.apply(lambda x: ' '.join([i.lower() for i in cleanParser.findall(x.strip())]))
 df.head()
 
-print('#Unique document Ids',df.document_id.nunique())
+print('###Unique document Ids',df.document_id.nunique())
 
 df.Experience.value_counts()
 
@@ -148,7 +146,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import MultinomialNB
 
-### Train Test Split
+###### Train Test Split
 
 ### Custom feature list
 customFeatures = ['wordCount', 'subjectivity','compoundIntensity','negativeIntensity',
@@ -185,7 +183,7 @@ test = vecModel.transform(X_test.sentence_text)
 train_2 = sp.hstack([train, X_train[customFeatures]])
 test_2 = sp.hstack([test, X_test[customFeatures]])
 
-### Only custom features
+###Only custom features
 train_3 = X_train[customFeatures]
 test_3 =  X_test[customFeatures]
 
@@ -197,7 +195,7 @@ models = {'SVM':SVC(C=1, kernel='linear', random_state=10),\
           'KNN': KNeighborsClassifier(n_neighbors=2),\
           'Naive Bayes': MultinomialNB()}
 
-### Only with TFIDF
+###### Only with TFIDF
 
 rslt = list()
 for name, m in models.items():
@@ -218,7 +216,7 @@ df_classifier.sort_values(by='Accuracy', ascending=False, inplace=True)
 df_classifier.reset_index(drop=True, inplace=True)
 df_classifier
 
-### Only Custom Features
+###### Only Custom Features
 
 rslt = list()
 for name, m in models.items():
@@ -237,7 +235,7 @@ df_classifier.sort_values(by='Accuracy', ascending=False, inplace=True)
 df_classifier.reset_index(drop=True, inplace=True)
 df_classifier
 
-### TFIDF + Custom features
+###### TFIDF + Custom features
 
 rslt = list()
 for name, m in models.items():
@@ -256,14 +254,9 @@ df_classifier.reset_index(drop=True, inplace=True)
 df_classifier
 
 
-
-### Evaluating Experience - Using Deep Learning Algorithm BERT
+# Experimentation code - Deep Learning BERT algorithm
 
 ### Pre-Trained BERT 12-Layer Model
-
-
-
-
 
 ### Loss function - Cross Entropy loss
 ### Optimizer - AdamW
@@ -455,7 +448,7 @@ for _ in trange(epochs, desc="Epoch"):
   for batch in validation_dataloader:
     ### Add batch to GPU
     batch = tuple(t.to(device) for t in batch)
-    ### batch = tuple(t for t in batch)
+    ###batch = tuple(t for t in batch)
     ### Unpack the inputs from our dataloader
     b_input_ids, b_input_mask, b_labels = batch
     ### Telling the model not to compute or store gradients, saving memory and speeding up validation
@@ -480,3 +473,4 @@ print("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
 
 from sklearn.metrics import classification_report
 print(classification_report(trueLabels, predLabels))
+
